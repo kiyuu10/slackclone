@@ -12,8 +12,17 @@ const joinNs = (element, nsData) => {
     roomList.innerHTML = ""
     //loop through each room, and add it to the DOM
     rooms.forEach(room => {
-        roomList.innerHTML += `<li><span class="glyphicon glyphicon-lock"></span>${room.roomTitle}</li>`
+        console.log(room)
+        roomList.innerHTML += `<li class="room"><span class="fa-solid fa-${room.privateRoom ? 'lock' : 'globe'}"></span>${room.roomTitle}</li>`
+    })
+
+    //add click listener to each room so the client can tell server it wants to join!
+    const roomNodes = document.querySelectorAll('.room')
+    Array.from(roomNodes).forEach(elem => {
+        elem.addEventListener('click', e => {
+            console.log("someone clicked on",e.target.innerHTML)
+        })
     })
 
     localStorage.setItem('lastNs', nsEndpoint)
-}
+} 
