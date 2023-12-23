@@ -30,6 +30,44 @@ io.on('connection', (socket) => {
 
 namespaces.forEach(namespace => {
     io.of(namespace.endpoint).on('connection', (socket) => {
-        console.log(`${socket.id} has connected to ${namespace.endpoint}`)
+        //console.log(`${socket.id} has connected to ${namespace.endpoint}`)
+        socket.on('joinRoom', async(roomTitle, ackCallBack) => {
+            //fetch the history
+            console.log(roomTitle)
+            const rooms = socket.rooms
+            
+            let i = 0
+            rooms.forEach(room => {
+                if(i!== 0) {
+                    socket.leave(room)
+                }
+                i++
+            })
+
+            //join the room
+            //NOTE - roomTitle is coming from the client. Which is not safe
+            //Auth to make sure the socket has right to be in that room
+            socket.join(roomTitle)
+            
+            // fetch the number of sockets in this room
+            const sockets = await io.of(namespace.endpoint).in(roomTitle).fetchSockets()
+
+            const socketCount = sockets.length
+
+            ackCallBack({numUsers: socketCount})
+            //socket.emit('getHistoryAndNumUsers',{})
+
+            socket.on('newMessageToRoom', (messageObj)=> {
+                console.log(messageObj)
+
+                //broadcast this to all the connected clients... this room only!
+                //how can we find out what room this socket is in?
+                const rooms = socket.rooms
+                const currentRoom = [...rooms][1]
+
+                //send out this messageObj to everyone including the sender
+                io.of(namespace.endpoint).in(currentRoom).emit('messageToRoom', messageObj)
+            })
+        })
     })
-}) 
+})
